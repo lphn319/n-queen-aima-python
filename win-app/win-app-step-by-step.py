@@ -1,57 +1,7 @@
-from search import NQueensProblem, depth_first_tree_search
+from search import NQueensProblem, Node
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk  # Import từ Pillow để hiển thị ảnh quân hậu
-
-"""
-    # def depth_first_tree_search(problem):
-    
-    [Figure 3.7]
-    Search the deepest nodes in the search tree first.
-    Search through the successors of a problem to find a goal.
-    The argument frontier should be an empty queue.
-    Repeats infinitely in case of loops.
-    
-
-    frontier = [Node(problem.initial)]  # Stack
-
-    while frontier:
-        node = frontier.pop()
-        if problem.goal_test(node.state):
-            return node
-        frontier.extend(node.expand(problem))
-    # return None
-
-    frontier = [Node(problem.initial)]:
-        frontier là danh sách dùng để lưu trữ các nút chờ được mở rộng (nó hoạt động như một stack).
-        Node(problem.initial) là nút bắt đầu, được tạo từ trạng thái ban đầu của bài toán.
-
-    while frontier::
-        Vòng lặp while chạy cho đến khi frontier trống. Nếu còn nút để mở rộng, vòng lặp tiếp tục.
-
-    node = frontier.pop():
-        Lấy nút cuối cùng trong frontier để mở rộng. Tìm kiếm theo chiều sâu (depth-first) được thực hiện bằng cách lấy nút cuối cùng của danh sách (giống như hoạt động của stack).
-
-    if problem.goal_test(node.state)::
-        Kiểm tra xem trạng thái hiện tại (node.state) có phải là trạng thái đích không.
-        Nếu trạng thái hiện tại là trạng thái đích, tức là bài toán đã được giải, hàm sẽ trả về node chứa lời giải.
-
-    frontier.extend(node.expand(problem)):
-        Nếu node chưa phải trạng thái đích, mở rộng nút đó bằng cách gọi node.expand(problem). Hàm này sẽ trả về danh sách các nút con từ node.
-        Sau đó, các nút con này được thêm vào frontier để tiếp tục quá trình tìm kiếm.
-
-    return None:
-        Nếu không tìm thấy lời giải và frontier trống, hàm trả về None, biểu thị rằng không có lời giải cho bài toán.
-"""
-
-# Hàm giải bài toán N-Queens
-def solve_partial_nqueens(n, initial_state):
-    problem = NQueensProblem(n)
-    problem.initial = initial_state
-    solution = depth_first_tree_search(problem)
-    if solution is None:
-        return None
-    return solution.state 
 
 # Hàm vẽ bàn cờ và hiển thị quân hậu
 def draw_chessboard(canvas, size, solution, queen_image):
@@ -72,6 +22,21 @@ def draw_chessboard(canvas, size, solution, queen_image):
             x = col * cell_size
             y = row * cell_size
             canvas.create_image(x + cell_size // 2, y + cell_size // 2, image=queen_image)  # Hiển thị ảnh quân hậu
+
+# Hàm giải bài toán N-Queens với cập nhật giao diện
+def depth_first_tree_search_with_updates(problem, canvas, size, queen_image, delay=500):
+    """Tìm kiếm theo chiều sâu và cập nhật giao diện Tkinter."""
+    frontier = [Node(problem.initial)]  # Stack
+    while frontier:
+        node = frontier.pop()
+        if problem.goal_test(node.state):
+            return node
+        # Vẽ trạng thái hiện tại
+        draw_chessboard(canvas, size, node.state, queen_image)
+        canvas.update()  # Cập nhật giao diện
+        canvas.after(delay)  # Tạm dừng để quan sát trạng thái
+        frontier.extend(node.expand(problem))
+    return None
 
 # Hàm xử lý đặt quân hậu đầu tiên
 def place_queen(event, canvas, size, initial_state, queen_image):
@@ -120,11 +85,13 @@ def create_gui():
 
     # Nút Solve
     def solve():
-        solution = solve_partial_nqueens(size, tuple(initial_state))
+        problem = NQueensProblem(size)
+        problem.initial = tuple(initial_state)
+        solution = depth_first_tree_search_with_updates(problem, canvas, size, queen_image)
         if solution is None:
             messagebox.showinfo("No Solution", "Không có lời giải cho bài toán N-Queens với trạng thái hiện tại.")
         else:
-            draw_chessboard(canvas, size, solution, queen_image)
+            draw_chessboard(canvas, size, solution.state, queen_image)
     solve_button = tk.Button(button_frame, text="Solve", command=solve)
     solve_button.grid(row=0, column=0, padx=5, pady=5)  # Đặt nút Solve vào Frame
     
